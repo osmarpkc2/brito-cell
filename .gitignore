@@ -19,6 +19,50 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv/
+
+# Database
+*.sqlite
+*.db
+instance/
+
+# Environment variables
+.env
+.env.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Local development
+.DS_Store
+Thumbs.db
+
+# Vercel
+.vercel/
+
+# Flask
+instance/
+.webassets-cache
+
+# Migrations
+migrations/versions/*.py
+!migrations/versions/.gitkeep
+
+# Uploads
+/static/images/products/*
+!/static/images/products/.gitkeep
 MANIFEST
 
 # Virtual Environment

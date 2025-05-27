@@ -1,0 +1,36 @@
+import os
+import sys
+from werkzeug.middleware.dispatcher import DispatcherMiddleware
+from werkzeug.serving import run_simple
+
+# Adiciona o diretório raiz ao path
+root_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(root_path)
+
+# Configura o ambiente
+os.environ['FLASK_ENV'] = 'production'
+os.environ['PYTHONPATH'] = os.pathsep.join(sys.path)
+
+# Importa o aplicativo Flask
+from app import app as application
+
+# Configura o aplicativo para usar o diretório estático corretamente
+application.static_folder = os.path.join(root_path, 'static')
+
+# Configura o caminho para os templates
+application.template_folder = os.path.join(root_path, 'templates')
+
+def handler(event, context):
+    """
+    Handler para o Vercel Serverless Functions
+    """
+    from vercel_python.wsgi import VercelWSGIHandler
+    return VercelWSGIHandler(application).handle(event, context)
+
+# Configuração para desenvolvimento local
+if __name__ == "__main__":
+    # Cria diretórios necessários
+    os.makedirs(os.path.join('static', 'images', 'products'), exist_ok=True)
+    
+    # Inicia o servidor de desenvolvimento
+    run_simple('0.0.0.0', 5000, application, use_reloader=True)
