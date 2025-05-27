@@ -8,14 +8,16 @@ root_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(root_path)
 
 # Configura o ambiente
+os.environ['FLASK_APP'] = 'app.py'
 os.environ['FLASK_ENV'] = 'production'
-os.environ['PYTHONPATH'] = os.pathsep.join(sys.path)
+os.environ['PYTHONUNBUFFERED'] = '1'
 
 # Importa o aplicativo Flask
 from app import app as application
 
 # Configura o aplicativo para usar o diretório estático corretamente
 application.static_folder = os.path.join(root_path, 'static')
+application.static_url_path = '/static'
 
 # Configura o caminho para os templates
 application.template_folder = os.path.join(root_path, 'templates')
@@ -29,5 +31,4 @@ def handler(event, context):
 
 # Configuração para desenvolvimento local
 if __name__ == "__main__":
-    # Inicia o servidor de desenvolvimento
-    run_simple('0.0.0.0', 5000, application, use_reloader=True)
+    application.run(debug=True, host='0.0.0.0', port=5000)

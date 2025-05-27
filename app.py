@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, flash, request, abort, Blueprint, current_app, json
+from flask import Flask, render_template, redirect, url_for, flash, request, abort, Blueprint, current_app, json, send_from_directory
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 import os
 from datetime import datetime, timezone
@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 from functools import wraps
 import hashlib
 import json
+from werkzeug.utils import secure_filename
+import sys
 
 # Carrega as configurações
 def load_config():
@@ -38,6 +40,15 @@ if not config['admin_credentials']['password'].startswith('pbkdf2:'):
 
 # Cria o blueprint principal
 main_bp = Blueprint('main', __name__)
+
+# Cria a aplicação Flask
+app = Flask(__name__)
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'sua-chave-secreta-padrao')
+app.config['UPLOAD_FOLDER'] = os.path.join('static', 'images', 'products')
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload size
+
+# Garante que o diretório de upload existe
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 # Configuração do Flask-Login
 login_manager = LoginManager()
@@ -292,7 +303,16 @@ def delete_product(product_id):
     
     return redirect(url_for('main.admin_dashboard'))
 
+# Registra os blueprints
+app.register_blueprint(main_bp)
+
+# Configura o LoginManager
+login_manager.init_app(app)
+
+# Adiciona o filtro ao ambiente do Jinja2
+app.jinja_env.filters['format_currency'] = lambda value: f'R$ {value:,.2f}'.replace(',', 'v').replace('.', ',').replace('v', '.')
+
 # Verifica se o arquivo está sendo executado diretamente
 if __name__ == '__main__':
-    app = create_app()
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
