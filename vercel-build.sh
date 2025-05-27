@@ -11,9 +11,9 @@ if [ ! -f "config.json" ]; then
     echo '{
         "admin_credentials": {
             "username": "admin",
-            "password": "admin123"
+            "password": "@IsaaciphonesBC2025"
         },
-        "secret_key": "sua-chave-secreta-aqui",
+        "secret_key": "@IsaaciphonesBC2025",
         "upload_folder": "static/images/products"
     }' > config.json
 fi
