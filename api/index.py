@@ -26,9 +26,19 @@ def handler(event, context):
     """
     Handler para o Vercel Serverless Functions
     """
-    from vercel_python.wsgi import VercelWSGIHandler
-    return VercelWSGIHandler(application).handle(event, context)
+    try:
+        from vercel_python.wsgi import VercelWSGIHandler
+        return VercelWSGIHandler(application).handle(event, context)
+    except Exception as e:
+        # Log do erro para depuração
+        print(f"Erro no handler: {str(e)}")
+        return {
+            'statusCode': 500,
+            'body': 'Erro interno do servidor',
+            'headers': {'Content-Type': 'text/plain'}
+        }
 
 # Configuração para desenvolvimento local
 if __name__ == "__main__":
-    application.run(debug=True, host='0.0.0.0', port=5000)
+    port = int(os.environ.get('PORT', 5000))
+    application.run(host='0.0.0.0', port=port, debug=True)
