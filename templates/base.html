@@ -160,7 +160,7 @@
     {% else %}
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
             <div class="container">
-                <a class="navbar-brand fw-bold" href="{{ url_for('index') }}">
+                <a class="navbar-brand fw-bold" href="{{ url_for('main.index') }}">
                     <span class="text-gold">b</span>rito <span class="text-silver">C</span>ell
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -169,7 +169,7 @@
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav ms-auto">
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('index') }}">Início</a>
+                            <a class="nav-link" href="{{ url_for('main.index') }}">Início</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="#produtos">Produtos</a>
@@ -178,7 +178,7 @@
                             <a class="nav-link" href="#contato">Contato</a>
                         </li>
                         <li class="nav-item ms-2">
-                            <a href="{{ url_for('admin_login') }}" class="btn btn-outline-light btn-sm mt-1">Área do Admin</a>
+                            <a href="{{ url_for('main.admin_login') }}" class="btn btn-outline-light btn-sm mt-1">Área do Admin</a>
                         </li>
                     </ul>
                 </div>
@@ -247,7 +247,7 @@
                 <div class="col-md-3">
                     <h5>Links Úteis</h5>
                     <ul class="list-unstyled">
-                        <li><a href="{{ url_for('index') }}" class="text-white">Início</a></li>
+                        <li><a href="{{ url_for('main.index') }}" class="text-white">Início</a></li>
                         <li><a href="#produtos" class="text-white">Produtos</a></li>
                         <li><a href="#contato" class="text-white">Contato</a></li>
                     </ul>

@@ -1,3 +1,8 @@
+# Arquivos de ambiente
+.env
+.env.*
+!.env.example
+
 # Python
 __pycache__/
 *.py[cod]
@@ -19,6 +24,7 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
 # Virtual Environment
 venv/
@@ -45,12 +51,50 @@ instance/
 # Logs
 *.log
 
+# Vercel
+.vercel/
+.vercel_build_output/
+.vercel_output/
+.vercel_builds/
+.vercel_deployment_complete.json
+.vercel_project.json
+.vercel_deployments/
+.vercel_build_state.json
+.vercel_deployment_output*
+.vercel_deployment_state.json
+.vercel_deployment_metadata*
+
+# Arquivos de cache
+.cache/
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+
+# Uploads
+/static/images/products/*
+!/static/images/products/.gitkeep
+*.log
+
 # Local development
 .DS_Store
 Thumbs.db
 
 # Vercel
-.vercel/
+.vercel
+.vercel_build_output
+.vercel_output
+.vercel_builds
+.vercel_deployment_complete.json
+.vercel_project.json
+.vercel_deployments
+.vercel_build_state.json
+.vercel_deployment_output
+.vercel_deployment_output.json
+.vercel_deployment_state.json
+.vercel_deployment_metadata.json
+.vercel_deployment_metadata
+MANIFEST
 
 # Flask
 instance/
@@ -63,12 +107,11 @@ migrations/versions/*.py
 # Uploads
 /static/images/products/*
 !/static/images/products/.gitkeep
-MANIFEST
 
-# Virtual Environment
-venv/
-ENV/
+# Arquivos de cache
+.cache/
 
+# Arquivos de sistema
 # Database
 *.db
 *.sqlite3
