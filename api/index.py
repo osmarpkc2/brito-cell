@@ -12,6 +12,9 @@ os.environ['FLASK_APP'] = 'app.py'
 os.environ['FLASK_ENV'] = 'production'
 os.environ['PYTHONUNBUFFERED'] = '1'
 
+# Instala as dependências necessárias
+os.system('pip install -r requirements-vercel.txt')
+
 # Importa o aplicativo Flask
 from app import app as application
 
@@ -32,9 +35,11 @@ def handler(event, context):
     except Exception as e:
         # Log do erro para depuração
         print(f"Erro no handler: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return {
             'statusCode': 500,
-            'body': 'Erro interno do servidor',
+            'body': f'Erro interno do servidor: {str(e)}',
             'headers': {'Content-Type': 'text/plain'}
         }
 
