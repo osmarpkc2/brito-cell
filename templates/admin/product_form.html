@@ -1,0 +1,344 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Editar' if product else 'Adicionar' }} Produto - Britô Cell{% endblock %}
+
+{% block content %}
+<style>
+    /* Estilos para as abas de upload/URL */
+    .nav-tabs .nav-link {
+        color: #6c757d;
+        border: 1px solid transparent;
+        border-bottom: none;
+        margin-right: 5px;
+    }
+    .nav-tabs .nav-link.active {
+        color: #0d6efd;
+        background-color: #fff;
+        border-color: #dee2e6 #dee2e6 #fff;
+        border-radius: 0.25rem 0.25rem 0 0;
+    }
+    .tab-content {
+        padding: 15px;
+        border: 1px solid #dee2e6;
+        border-top: none;
+        border-radius: 0 0 0.25rem 0.25rem;
+    }
+</style>
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">{{ 'Editar' if product else 'Adicionar Novo' }} Produto</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST" enctype="multipart/form-data" id="productForm" data-is-new="{% if not product %}true{% else %}false{% endif %}">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Nome do Produto</label>
+                        <input type="text" class="form-control" id="name" name="name" 
+                               value="{{ product.name if product else '' }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Descrição</label>
+                        <textarea class="form-control" id="description" name="description" 
+                                 rows="5" required>{{ product.description if product else '' }}</textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="price" class="form-label">Preço (R$)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">R$</span>
+                                <input type="number" step="0.01" class="form-control" 
+                                       id="price" name="price" value="{{ '%.2f'|format(product.price) if product else '' }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="stock" class="form-label">Quantidade em Estoque</label>
+                            <input type="number" class="form-control" id="stock" name="stock" 
+                                   min="0" value="{{ product.stock if product else '0' }}" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="color" class="form-label">Cor</label>
+                            <input type="text" class="form-control" id="color" name="color" 
+                                   value="{{ product.color if product else '' }}" 
+                                   placeholder="Ex: Preto, Branco, Dourado, etc." required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="storage" class="form-label">Armazenamento</label>
+                            <select class="form-select" id="storage" name="storage" required>
+                                <option value="64GB" {% if product and product.storage == '64GB' %}selected{% endif %}>64GB</option>
+                                <option value="128GB" {% if not product or (product and product.storage == '128GB') %}selected{% endif %}>128GB</option>
+                                <option value="256GB" {% if product and product.storage == '256GB' %}selected{% endif %}>256GB</option>
+                                <option value="512GB" {% if product and product.storage == '512GB' %}selected{% endif %}>512GB</option>
+                                <option value="1TB" {% if product and product.storage == '1TB' %}selected{% endif %}>1TB</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <ul class="nav nav-tabs mb-3" id="imageTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="upload-tab" data-bs-toggle="tab" data-bs-target="#upload" type="button" role="tab">
+                                    Upload de Arquivo
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="url-tab" data-bs-toggle="tab" data-bs-target="#url" type="button" role="tab">
+                                    URL da Imagem
+                                </button>
+                            </li>
+                        </ul>
+                        
+                        <div class="tab-content" id="imageTabContent">
+                            <!-- Aba de Upload de Arquivo -->
+                            <div class="tab-pane fade show active" id="upload" role="tabpanel" aria-labelledby="upload-tab">
+                                <div class="mb-3">
+                                    <label for="image" class="form-label">Enviar Imagem</label>
+                                    <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                                    <div class="form-text">
+                                        Formatos suportados: JPG, PNG, GIF. Tamanho máximo: 5MB.
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Aba de URL -->
+                            <div class="tab-pane fade" id="url" role="tabpanel" aria-labelledby="url-tab">
+                                <div class="mb-3">
+                                    <label for="image_url" class="form-label">URL da Imagem</label>
+                                    <input type="url" class="form-control" id="image_url" name="image_url" 
+                                           placeholder="https://exemplo.com/imagem.jpg"
+                                           value="{{ product.image_url if product and product.image_url else '' }}">
+                                    <div class="form-text">
+                                        Cole a URL completa da imagem (ex: https://exemplo.com/imagem.jpg)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Pré-visualização da Imagem -->
+                        <div class="mt-3 text-center">
+                            <div id="imagePreview" class="border rounded p-3 {% if not product or (not product.image and not product.image_url) %}d-none{% endif %}">
+                                <p class="text-muted mb-2">{% if product and (product.image or product.image_url) %}Pré-visualização{% else %}Pré-visualização{% endif %}:</p>
+                                <img 
+                                    id="previewImg" 
+                                    src="{% if product %}{% if product.image %}{{ url_for('static', filename=product.image) }}{% elif product.image_url %}{{ product.image_url }}{% endif %}{% else %}#{% endif %}" 
+                                    alt="Pré-visualização da imagem" 
+                                    class="img-fluid" 
+                                    {% if not product or (not product.image and not product.image_url) %}style="display: none;"{% else %}style="max-height: 300px;"{% endif %}"
+                                    onerror="this.onerror=null; this.style.display='none'; document.getElementById('imagePreview').querySelector('p').textContent='Não foi possível carregar a imagem.';">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                {% if product %}
+                <button type="button" class="btn btn-danger me-auto" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                    <i class="bi bi-trash"></i> Excluir Produto
+                </button>
+                {% endif %}
+                
+                <button type="reset" class="btn btn-outline-secondary me-md-2">
+                    <i class="bi bi-x-circle"></i> Limpar
+                </button>
+                <button type="submit" class="btn btn-gold">
+                    <i class="bi bi-check-circle"></i> {{ 'Atualizar' if product else 'Salvar' }} Produto
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if product %}
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Tem certeza que deseja excluir o produto "{{ product.name }}"? Esta ação não pode ser desfeita.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form action="{{ url_for('delete_product', product_id=product.id) }}" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Confirmar Exclusão
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const imageInput = document.getElementById('image');
+        const imageUrlInput = document.getElementById('image_url');
+        const previewImg = document.getElementById('previewImg');
+        const imagePreview = document.getElementById('imagePreview');
+        const uploadTab = document.getElementById('upload-tab');
+        const urlTab = document.getElementById('url-tab');
+        const form = document.getElementById('productForm');
+        
+        // Função para atualizar a pré-visualização
+        function updatePreview(src) {
+            if (src && src !== '#') {
+                previewImg.src = src;
+                previewImg.style.display = 'block';
+                previewImg.style.maxHeight = '300px';
+                imagePreview.classList.remove('d-none');
+                
+                // Atualiza o texto da legenda
+                const previewLabel = imagePreview.querySelector('p');
+                if (previewLabel) {
+                    previewLabel.textContent = 'Pré-visualização:';
+                }
+            } else {
+                previewImg.style.display = 'none';
+                imagePreview.classList.add('d-none');
+            }
+        }
+        
+        // Manipulador de mudança para upload de arquivo
+        if (imageInput) {
+            imageInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    // Verifica se é uma imagem
+                    if (!file.type.match('image.*')) {
+                        alert('Por favor, selecione um arquivo de imagem válido (JPG, PNG, GIF).');
+                        this.value = '';
+                        updatePreview(null);
+                        return;
+                    }
+                    
+                    // Limpa o campo de URL se houver
+                    if (imageUrlInput) {
+                        imageUrlInput.value = '';
+                    }
+                    
+                    // Cria um leitor de arquivo para pré-visualização
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        updatePreview(e.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    updatePreview(null);
+                }
+            });
+        }
+        
+        // Manipulador de mudança para URL da imagem
+        if (imageUrlInput) {
+            imageUrlInput.addEventListener('input', function() {
+                const url = this.value.trim();
+                if (url) {
+                    // Verifica se parece ser uma URL de imagem
+                    if (url.match(/\.(jpeg|jpg|gif|png)(\?.*)?$/i)) {
+                        // Limpa o campo de upload de arquivo
+                        if (imageInput) {
+                            imageInput.value = '';
+                        }
+                        updatePreview(url);
+                    } else if (url === '') {
+                        updatePreview(null);
+                    }
+                } else {
+                    updatePreview(null);
+                }
+            });
+            
+            // Dispara o evento input ao carregar a página se já houver uma URL
+            if (imageUrlInput.value) {
+                const event = new Event('input');
+                imageUrlInput.dispatchEvent(event);
+            }
+        }
+        
+        // Atualiza a pré-visualização ao carregar a página se já houver uma imagem
+        if (previewImg && previewImg.src && previewImg.src !== '#') {
+            updatePreview(previewImg.src);
+        }
+        
+        // Limpa os campos ao alternar entre as abas
+        if (uploadTab) {
+            uploadTab.addEventListener('click', function() {
+                if (imageUrlInput) imageUrlInput.value = '';
+                updatePreview(null);
+            });
+        }
+        
+        if (urlTab) {
+            urlTab.addEventListener('click', function() {
+                if (imageInput) imageInput.value = '';
+                updatePreview(null);
+            });
+        }
+        
+        // Validação do formulário
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const name = document.getElementById('name').value.trim();
+                const description = document.getElementById('description').value.trim();
+                const price = document.getElementById('price').value;
+                const stock = document.getElementById('stock').value;
+                const color = document.getElementById('color').value;
+                const isNewProduct = form.dataset.isNew === 'true';
+                
+                // Verifica se é um novo produto ou uma edição
+                if (isNewProduct && !imageInput.files[0] && !imageUrlInput.value) {
+                    e.preventDefault();
+                    alert('Por favor, envie uma imagem ou forneça uma URL de imagem.');
+                    return false;
+                }
+                
+                if (!name || !description || !price || !stock || !color) {
+                    e.preventDefault();
+                    alert('Por favor, preencha todos os campos obrigatórios.');
+                    return false;
+                }
+                
+                // For new products, ensure an image is uploaded or URL is provided
+                if (isNewProduct && !imageInput.files[0] && !imageUrlInput.value) {
+                    e.preventDefault();
+                    alert('Por favor, envie uma imagem ou forneça uma URL de imagem.');
+                    return false;
+                }
+                
+                return true;
+            });
+        }
+        
+        // Format price input
+        const priceInput = document.getElementById('price');
+        if (priceInput) {
+            priceInput.addEventListener('blur', function() {
+                if (this.value) {
+                    this.value = parseFloat(this.value).toFixed(2);
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

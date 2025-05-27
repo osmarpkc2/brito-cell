@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block main_content %}
+<!-- Hero Section -->
+<div class="bg-dark text-white py-5">
+    <div class="container py-5">
+        <div class="row align-items-center">
+            <div class="col-lg-6" data-aos="fade-right">
+                <h1 class="display-4 fw-bold mb-4">
+                    <span class="d-inline-flex flex-wrap gap-2">
+                        <span class="text-gold">Os</span>
+                        <span class="text-silver">melhores</span>
+                        <span class="text-gold">iPhones</span>
+                        <span class="text-silver">com</span>
+                        <span class="text-gold">preços</span>
+                        <span class="text-silver">especiais</span>
+                    </span>
+                </h1>
+                <p class="lead mb-4">Encontre o iPhone dos seus sonhos com as melhores condições de pagamento e garantia.</p>
+                <a href="#produtos" class="btn btn-gold btn-lg">Ver Produtos</a>
+            </div>
+            <div class="col-lg-6 text-center" data-aos="fade-left" data-aos-delay="200">
+                <img src="https://images.macrumors.com/t/P94j9o6lR5ujSYJOfdvseqk3Lc8=/1600x/article-new/2023/11/iphone-16-pro-desert-roundup-header-1.png" alt="iPhone 16 Pro Max" class="img-fluid rounded-3 shadow">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Featured Products -->
+<section id="produtos" class="py-5">
+    <div class="container">
+        <div class="text-center mb-5" data-aos="fade-up">
+            <h2 class="fw-bold">Nossos Produtos</h2>
+            <p class="text-muted">Escolha entre os melhores modelos disponíveis</p>
+        </div>
+        
+        <div class="row">
+            {% for product in products %}
+            <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
+                <div class="card product-card h-100">
+                    <div class="text-center p-3" style="height: 200px; display: flex; align-items: center; justify-content: center;">
+                        {% if product.image %}
+                            <img src="{{ url_for('static', filename=product.image) }}" 
+                                 class="card-img-top product-img" 
+                                 alt="{{ product.name }}"
+                                 style="max-height: 100%; max-width: 100%; object-fit: contain;"
+                                 {% if product.image_url %}
+                                 onerror="this.onerror=null; this.src='{{ product.image_url }}'"
+                                 {% else %}
+                                 onerror="this.onerror=null; this.src='https://via.placeholder.com/300x300/CCCCCC/999999?text=Sem+Imagem'"
+                                 {% endif %}>
+                        {% elif product.image_url %}
+                            <img src="{{ product.image_url }}" 
+                                 class="card-img-top product-img" 
+                                 alt="{{ product.name }}"
+                                 style="max-height: 100%; max-width: 100%; object-fit: contain;"
+                                 onerror="this.onerror=null; this.src='https://via.placeholder.com/300x300/CCCCCC/999999?text=Imagem+Não+Encontrada';">
+                        {% else %}
+                            <img src="https://via.placeholder.com/300x300/CCCCCC/999999?text=Sem+Imagem" 
+                                 class="card-img-top product-img" 
+                                 alt="Sem imagem"
+                                 style="max-height: 100%; max-width: 100%; object-fit: contain;">
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">{{ product.name }}</h5>
+                        <p class="card-text text-muted">{{ product.description[:100] }}...</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="h5 mb-0">R$ {{ "%.2f"|format(product.price) }}</span>
+                            <span class="badge {% if product.stock > 0 %}bg-success{% else %}bg-danger{% endif %}">
+                                {% if product.stock > 0 %}Em estoque{% else %}Esgotado{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white border-top-0">
+                        {% set color_names = {
+                            'gold': 'Dourado',
+                            'silver': 'Prata',
+                            'blue': 'Azul',
+                            'black': 'Preto',
+                            'white': 'Branco',
+                            'red': 'Vermelho',
+                            'green': 'Verde'
+                        } %}
+                        {% set color_display = color_names.get(product.color, product.color) %}
+                        {% set message = 'Olá! Gostaria de comprar o produto: ' ~ product.name ~ '%0A' ~
+                            'Cor: ' ~ color_display ~ '%0A' ~
+                            'Armazenamento: ' ~ (product.storage|default('Não informado')) ~ '%0A' ~
+                            'Preço: R$ ' ~ "%.2f"|format(product.price)|replace('.', ',') ~ '%0A' ~
+                            (('Descrição: ' ~ product.description[:100] ~ '...') if product.description else '')
+                        %}
+                        <a href="https://wa.me/5588997063045?text={{ message|urlencode }}"
+                           class="btn btn-success w-100 {% if product.stock <= 0 %}disabled{% endif %}" 
+                           target="_blank"
+                           style="background-color: #25D366; border-color: #25D366;"
+                           {% if product.stock <= 0 %}aria-disabled="true"{% endif %}>
+                            <i class="bi bi-whatsapp me-2"></i> Comprar Agora
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="col-12 text-center">
+                <div class="alert alert-info">Nenhum produto cadastrado no momento.</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Features -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-4 text-center" data-aos="fade-up" data-aos-delay="100">
+                <div class="p-4 rounded-3 bg-white h-100">
+                    <div class="mb-3">
+                        <i class="bi bi-truck text-gold h1"></i>
+                    </div>
+                    <h4>Garantia</h4>
+                    <p class="text-muted">Todos os nossos produtos possuem garantia de 1 ano contra defeitos de fabricação.</p>
+                </div>
+            </div>
+            <div class="col-md-4 text-center" data-aos="fade-up" data-aos-delay="300">
+                <div class="p-4 rounded-3 bg-white h-100">
+                    <div class="mb-3">
+                        <i class="bi bi-arrow-repeat text-gold h1"></i>
+                    </div>
+                    <h4>Frete Grátis</h4>
+                    <p class="text-muted">Frete grátis para todo o Brasil em compras acima de R$ 3.000,00.</p>
+                </div>
+            </div>
+            <div class="col-md-4 text-center" data-aos="fade-up" data-aos-delay="500">
+                <div class="p-4 rounded-3 bg-white h-100">
+                    <div class="mb-3">
+                        <i class="bi bi-credit-card display-4 text-gold"></i>
+                    </div>
+                    <h4>Parcele em até 12x</h4>
+                    <p class="text-muted">Parcele suas compras no cartão de crédito em até 12x sem juros.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Contact -->
+<section id="contato" class="py-5" data-aos="fade-up">
+    <div class="container">
+        <div class="text-center mb-5" data-aos="fade-up">
+            <h2 class="fw-bold">Entre em Contato</h2>
+            <p class="lead">Tem alguma dúvida? Entre em contato conosco que teremos prazer em ajudar.</p>
+        </div>        
+                <div class="row g-4">
+                    <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                        <div class="p-4 rounded-3 bg-light h-100">
+                            <i class="bi bi-geo-alt-fill text-gold h3"></i>
+                            <h5 class="mt-3">Endereço</h5>
+                            <p class="text-muted mb-0">Rua Major Felinto<br>Carnaubal - CE</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                        <div class="p-4 rounded-3 bg-light h-100">
+                            <i class="bi bi-whatsapp text-success h3"></i>
+                            <h5 class="mt-3">WhatsApp</h5>
+                            <p class="mb-0">
+                                <a href="https://wa.me/5588997063045" class="text-decoration-none text-success" target="_blank">
+                                    (88) 99706-3045
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
+                        <div class="p-4 rounded-3 bg-light h-100">
+                            <i class="bi bi-instagram text-danger h3"></i>
+                            <h5 class="mt-3">Instagram</h5>
+                            <p class="mb-0">
+                                <a href="https://instagram.com/britocell_ce" class="text-decoration-none text-danger" target="_blank">
+                                    @britocell_ce
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,168 @@
+/* Admin Dashboard Styles */
+
+/* Sidebar */
+.admin-sidebar {
+    background: linear-gradient(180deg, #2c3e50 0%, #1a252f 100%);
+    min-height: calc(100vh - 56px);
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.admin-sidebar .nav-link {
+    color: rgba(255, 255, 255, 0.7);
+    padding: 0.75rem 1.5rem;
+    margin: 0.25rem 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.admin-sidebar .nav-link:hover,
+.admin-sidebar .nav-link.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    transform: translateX(5px);
+}
+
+.admin-sidebar .nav-link i {
+    width: 24px;
+    text-align: center;
+    margin-right: 10px;
+}
+
+/* Card Styles */
+.card {
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    margin-bottom: 1.5rem;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    background-color: #fff;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 1.25rem 1.5rem;
+    border-top-left-radius: 0.75rem !important;
+    border-top-right-radius: 0.75rem !important;
+}
+
+/* Table Styles */
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    color: #6c757d;
+    border-top: none;
+    padding: 1rem 1.5rem;
+    background-color: #f8f9fa;
+}
+
+.table td {
+    padding: 1rem 1.5rem;
+    vertical-align: middle;
+    border-color: #f1f3f7;
+}
+
+/* Status Badges */
+.badge {
+    font-weight: 500;
+    padding: 0.45em 0.8em;
+    font-size: 0.75em;
+    letter-spacing: 0.5px;
+    border-radius: 50rem;
+}
+
+/* Buttons */
+.btn {
+    font-weight: 500;
+    padding: 0.5rem 1.25rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.8125rem;
+}
+
+/* Form Controls */
+.form-control,
+.form-select {
+    padding: 0.6rem 1rem;
+    border: 1px solid #e1e5eb;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #5d8aa8;
+    box-shadow: 0 0 0 0.25rem rgba(93, 138, 168, 0.25);
+}
+
+/* Image Preview */
+.img-preview-container {
+    border: 2px dashed #e1e5eb;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    text-align: center;
+    background-color: #f8f9fa;
+    transition: all 0.2s ease;
+}
+
+.img-preview-container:hover {
+    border-color: #5d8aa8;
+    background-color: #f0f5f9;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 767.98px) {
+    .admin-sidebar {
+        min-height: auto;
+        margin-bottom: 1.5rem;
+    }
+    
+    .table-responsive {
+        border-radius: 0.5rem;
+        border: 1px solid #e1e5eb;
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
