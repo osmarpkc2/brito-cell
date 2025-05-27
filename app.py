@@ -19,7 +19,7 @@ def load_config():
         config = {
             "admin_credentials": {
                 "username": "admin",
-                "password": "admin123"  # Será substituído por hash
+                "password": "@IsaaciphonesBC2025"  # Será substituído por hash
             },
             "secret_key": "sua-chave-secreta-aqui",
             "upload_folder": "static/images/products"
