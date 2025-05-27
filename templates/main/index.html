@@ -1,5 +1,24 @@
 {% extends "base.html" %}
 
+{% block extra_css %}
+<style>
+    .product-color-indicator {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 1px solid #dee2e6;
+        margin-right: 5px;
+    }
+    
+    .product-img {
+        max-height: 100%;
+        max-width: 100%;
+        object-fit: contain;
+    }
+</style>
+{% endblock %}
+
 {% block main_content %}
 <!-- Hero Section -->
 <div class="bg-dark text-white py-5">
@@ -39,31 +58,20 @@
             <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
                 <div class="card product-card h-100">
                     <div class="text-center p-3" style="height: 200px; display: flex; align-items: center; justify-content: center;">
-                        {% if product.image %}
-                            <img src="{{ url_for('static', filename=product.image) }}" 
-                                 class="card-img-top product-img" 
-                                 alt="{{ product.name }}"
-                                 style="max-height: 100%; max-width: 100%; object-fit: contain;"
-                                 {% if product.image_url %}
-                                 onerror="this.onerror=null; this.src='{{ product.image_url }}'"
-                                 {% else %}
-                                 onerror="this.onerror=null; this.src='https://via.placeholder.com/300x300/CCCCCC/999999?text=Sem+Imagem'"
-                                 {% endif %}>
-                        {% elif product.image_url %}
-                            <img src="{{ product.image_url }}" 
-                                 class="card-img-top product-img" 
-                                 alt="{{ product.name }}"
-                                 style="max-height: 100%; max-width: 100%; object-fit: contain;"
-                                 onerror="this.onerror=null; this.src='https://via.placeholder.com/300x300/CCCCCC/999999?text=Imagem+Não+Encontrada';">
-                        {% else %}
-                            <img src="https://via.placeholder.com/300x300/CCCCCC/999999?text=Sem+Imagem" 
-                                 class="card-img-top product-img" 
-                                 alt="Sem imagem"
-                                 style="max-height: 100%; max-width: 100%; object-fit: contain;">
-                        {% endif %}
+                        <img 
+                            src="{{ get_product_image_url(product) }}" 
+                            class="card-img-top product-img" 
+                            alt="{{ product.name }}"
+                            onerror="this.onerror=null; this.src='https://via.placeholder.com/300x300/CCCCCC/999999?text=Imagem+Não+Encontrada';">
                     </div>
                     <div class="card-body">
-                        <h5 class="card-title">{{ product.name }}</h5>
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title mb-0">{{ product.name }}</h5>
+                            <div class="d-flex align-items-center">
+                                <div class="product-color-indicator" data-color="{{ product.color if product.color else '' }}"></div>
+                                <small class="text-muted">{{ product.color if product.color else 'Sem cor' }}</small>
+                            </div>
+                        </div>
                         <p class="card-text text-muted">{{ product.description[:100] }}...</p>
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="h5 mb-0">R$ {{ "%.2f"|format(product.price) }}</span>
@@ -73,18 +81,8 @@
                         </div>
                     </div>
                     <div class="card-footer bg-white border-top-0">
-                        {% set color_names = {
-                            'gold': 'Dourado',
-                            'silver': 'Prata',
-                            'blue': 'Azul',
-                            'black': 'Preto',
-                            'white': 'Branco',
-                            'red': 'Vermelho',
-                            'green': 'Verde'
-                        } %}
-                        {% set color_display = color_names.get(product.color, product.color) %}
                         {% set message = 'Olá! Gostaria de comprar o produto: ' ~ product.name ~ '%0A' ~
-                            'Cor: ' ~ color_display ~ '%0A' ~
+                            'Cor: ' ~ product.color ~ '%0A' ~
                             'Armazenamento: ' ~ (product.storage|default('Não informado')) ~ '%0A' ~
                             'Preço: R$ ' ~ "%.2f"|format(product.price)|replace('.', ',') ~ '%0A' ~
                             (('Descrição: ' ~ product.description[:100] ~ '...') if product.description else '')
@@ -185,4 +183,101 @@
         </div>
     </div>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Mapeamento de cores em português e inglês para códigos hexadecimais
+    const colorMap = {
+        // Cores básicas - Português
+        'preto': '#000000',
+        'branco': '#FFFFFF',
+        'prata': '#C0C0C0',
+        'dourado': '#FFD700',
+        'azul': '#0000FF',
+        'azul meia-noite': '#000000',
+        'azul sierra': '#5E8EA2',
+        'azul-pacífico': '#007AFF',
+        'vermelho': '#FF0000',
+        'vermelho produto': '#FF3B30',
+        'verde': '#008000',
+        'verde alpino': '#5E8E3E',
+        'amarelo': '#FFFF00',
+        'roxo': '#800080',
+        'rosa': '#FFC0CB',
+        'rosa rosa': '#FF2D55',
+        'cinza': '#808080',
+        'cinza-espacial': '#8E8E93',
+        'grafite': '#4B4B4C',
+        'azul marinho': '#000080',
+        'verde água': '#00FFFF',
+        'laranja': '#FFA500',
+        'marrom': '#A52A2A',
+        'ouro rosa': '#E0BFB8',
+        'dourado': '#FFD700',
+        'dourado sierra': '#A7905E',
+        'amarelo claro': '#FFD60A',
+        
+        // Cores básicas - Inglês
+        'black': '#000000',
+        'white': '#FFFFFF',
+        'silver': '#C0C0C0',
+        'gold': '#FFD700',
+        'blue': '#0000FF',
+        'midnight': '#000000',
+        'sierra blue': '#5E8EA2',
+        'pacific blue': '#007AFF',
+        'red': '#FF0000',
+        'product red': '#FF3B30',
+        'green': '#008000',
+        'alpine green': '#5E8E3E',
+        'yellow': '#FFFF00',
+        'purple': '#800080',
+        'pink': '#FFC0CB',
+        'rose gold': '#E0BFB8',
+        'gray': '#808080',
+        'space gray': '#8E8E93',
+        'graphite': '#4B4B4C',
+        'navy blue': '#000080',
+        'cyan': '#00FFFF',
+        'orange': '#FFA500',
+        'brown': '#A52A2A',
+        'light yellow': '#FFD60A',
+        'starlight': '#F8F9F0',
+        'midnight green': '#004953',
+        'space black': '#1B1B1B',
+        'jet black': '#1B1B1B',
+        'matte black': '#1B1B1B',
+        'rose': '#FF2D55',
+        'coral': '#FF6B6B',
+        'mint': '#3EB489',
+        'lavender': '#E6E6FA',
+        'titanium': '#878681',
+        'natural titanium': '#878681',
+        'blue titanium': '#4E7B9D',
+        'black titanium': '#2D2D2D',
+        'white titanium': '#E5E5E5'
+    };
+
+    // Função para normalizar o nome da cor (remover acentos e converter para minúsculas)
+    function normalizeColorName(colorName) {
+        if (!colorName) return '';
+        return colorName.toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    }
+
+    // Definir as cores dos indicadores
+    document.querySelectorAll('.product-color-indicator').forEach(indicator => {
+        const colorName = indicator.getAttribute('data-color');
+        if (colorName) {
+            const normalizedColor = normalizeColorName(colorName);
+            const colorCode = colorMap[normalizedColor] || '#CCCCCC';
+            indicator.style.backgroundColor = colorCode;
+        } else {
+            indicator.style.backgroundColor = '#CCCCCC';
+        }
+    });
+});
+</script>
 {% endblock %}

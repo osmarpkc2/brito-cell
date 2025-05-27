@@ -45,9 +45,7 @@
     "FLASK_APP": "app.py",
     "FLASK_ENV": "production",
     "PYTHONPATH": "/var/task:/var/runtime",
-    "PYTHONUNBUFFERED": "true",
-    "UPLOAD_FOLDER": "/var/task/static/images/products",
-    "SQLALCHEMY_DATABASE_URI": "sqlite:////tmp/britocell.db"
+    "PYTHONUNBUFFERED": "true"
   },
   "build": {
     "env": {

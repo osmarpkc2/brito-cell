@@ -1,7 +1,12 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="{{ url_for('main.admin_dashboard') }}">
-            <i class="bi bi-phone"></i> Britô Cell Admin
+        <a class="navbar-brand d-flex align-items-center" href="{{ url_for('main.admin_dashboard') }}">
+            <i class="bi bi-phone text-gold me-2"></i>
+            <span class="d-none d-sm-inline-flex">
+                <span class="text-gold fw-bold">Brito</span>
+                <span class="text-silver fw-bold">Cell</span>
+                <span class="text-gold fw-bold ms-1">Painel</span>
+            </span>
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNavbar">
             <span class="navbar-toggler-icon"></span>

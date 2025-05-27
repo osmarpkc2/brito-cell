@@ -29,8 +29,5 @@ def handler(event, context):
 
 # Configuração para desenvolvimento local
 if __name__ == "__main__":
-    # Cria diretórios necessários
-    os.makedirs(os.path.join('static', 'images', 'products'), exist_ok=True)
-    
     # Inicia o servidor de desenvolvimento
     run_simple('0.0.0.0', 5000, application, use_reloader=True)

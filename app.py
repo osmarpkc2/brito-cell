@@ -1,22 +1,107 @@
-from flask import Flask, render_template, redirect, url_for, flash, request, abort, Blueprint, current_app
-from flask_sqlalchemy import SQLAlchemy
+from flask import Flask, render_template, redirect, url_for, flash, request, abort, Blueprint, current_app, json
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from flask_migrate import Migrate
-from werkzeug.security import generate_password_hash, check_password_hash
-from werkzeug.utils import secure_filename
-from werkzeug.urls import url_decode
 import os
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 from functools import wraps
+import hashlib
+import json
 
-# Inicializa as extensões
-db = SQLAlchemy()
-migrate = Migrate()
-login_manager = LoginManager()
+# Carrega as configurações
+def load_config():
+    try:
+        with open('config.json', 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        # Cria um arquivo de configuração padrão se não existir
+        config = {
+            "admin_credentials": {
+                "username": "admin",
+                "password": "admin123"  # Será substituído por hash
+            },
+            "secret_key": "sua-chave-secreta-aqui",
+            "upload_folder": "static/images/products"
+        }
+        with open('config.json', 'w', encoding='utf-8') as f:
+            json.dump(config, f, indent=4)
+        return config
+
+# Carrega as configurações
+config = load_config()
+
+# Atualiza a senha para hash se ainda estiver em texto plano
+if not config['admin_credentials']['password'].startswith('pbkdf2:'):
+    from werkzeug.security import generate_password_hash
+    config['admin_credentials']['password'] = generate_password_hash(config['admin_credentials']['password'])
+    with open('config.json', 'w', encoding='utf-8') as f:
+        json.dump(config, f, indent=4)
 
 # Cria o blueprint principal
 main_bp = Blueprint('main', __name__)
+
+# Configuração do Flask-Login
+login_manager = LoginManager()
+login_manager.login_view = 'main.admin_login'
+login_manager.login_message = 'Por favor, faça login para acessar esta página.'
+login_manager.login_message_category = 'warning'
+
+# Modelo de usuário
+class User(UserMixin):
+    def __init__(self, id, username, password_hash):
+        self.id = id
+        self.username = username
+        self.password_hash = password_hash
+
+    def check_password(self, password):
+        from werkzeug.security import check_password_hash
+        return check_password_hash(self.password_hash, password)
+
+# Carrega o usuário admin do arquivo de configuração
+admin_creds = config['admin_credentials']
+admin_user = User(id=1, username=admin_creds['username'], password_hash=admin_creds['password'])
+
+@login_manager.user_loader
+def load_user(user_id):
+    if int(user_id) == 1:  # ID 1 é o admin
+        return admin_user
+    return None
+
+# Dados em memória (substitui o banco de dados)
+products = [
+    {
+        'id': 1,
+        'name': 'iPhone 15 Pro Max',
+        'description': 'O mais avançado iPhone com câmera profissional e tela Super Retina XDR.',
+        'price': 8999.90,
+        'stock': 10,
+        'color': 'black',
+        'storage': '256GB',
+        'image_url': 'https://images.unsplash.com/photo-1697898706717-858403a390ac?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+        'created_at': datetime.now(timezone.utc)
+    },
+    {
+        'id': 2,
+        'name': 'iPhone 14 Pro',
+        'description': 'Câmera avançada, chip A16 Bionic e tela Super Retina XDR.',
+        'price': 7599.90,
+        'stock': 5,
+        'color': 'silver',
+        'storage': '128GB',
+        'image_url': 'https://images.unsplash.com/photo-1673505566097-5d8a75a2f602d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+        'created_at': datetime.now(timezone.utc)
+    },
+    {
+        'id': 3,
+        'name': 'iPhone 13',
+        'description': 'Sistema de câmera avançado, chip A15 Bionic e bateria que dura o dia todo.',
+        'price': 4999.90,
+        'stock': 3,
+        'color': 'blue',
+        'storage': '128GB',
+        'image_url': 'https://images.unsplash.com/photo-1632660678308-393e2d0e2b8d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+        'created_at': datetime.now(timezone.utc)
+    }
+]
 
 def create_app():
     # Carrega as variáveis de ambiente do arquivo .env
@@ -26,150 +111,110 @@ def create_app():
     app = Flask(__name__)
     
     # Configurações da aplicação
-    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-key-change-in-production')
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI', 'sqlite:///britocell.db')
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['UPLOAD_FOLDER'] = os.path.join('static', 'images', 'products')
+    app.config['SECRET_KEY'] = config.get('secret_key', os.getenv('SECRET_KEY', 'dev-key-change-in-production'))
+    app.config['UPLOAD_FOLDER'] = config.get('upload_folder', os.path.join('static', 'images', 'products'))
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
     
     # Configura o caminho para a pasta de templates
     template_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
     app.template_folder = template_dir
     
-    # Garante que a pasta de uploads existe
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-    
-    # Inicializa as extensões com a aplicação
-    db.init_app(app)
-    migrate.init_app(app, db)
+    # Inicializa o Flask-Login
     login_manager.init_app(app)
-    login_manager.login_view = 'main.admin_login'  # Atualizado para usar o nome do blueprint
     
     # Registra o blueprint principal
     app.register_blueprint(main_bp)
     
-    # Cria o contexto da aplicação para poder acessar o app dentro das funções
-    with app.app_context():
-        db.create_all()
-        # Inicializa o banco de dados se necessário
-        init_db(app)
-    
     return app
 
-# Models
-class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    password_hash = db.Column(db.String(200), nullable=False)
-
-class Product(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(200), nullable=False)
-    description = db.Column(db.Text, nullable=False)
-    price = db.Column(db.Float, nullable=False)
-    stock = db.Column(db.Integer, nullable=False, default=0)
-    image = db.Column(db.String(200))  # Caminho para imagem salva localmente
-    image_url = db.Column(db.String(500))  # URL para imagem externa
-    color = db.Column(db.String(50), nullable=False, default='Preto')
-    storage = db.Column(db.String(50), nullable=False, default='128GB')
-
-# Função auxiliar para verificar se um arquivo tem uma extensão permitida
-def allowed_file(filename):
-    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-# Função para carregar o usuário pelo ID
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
-
-# Função para salvar um produto
-def save_product(product, form_data, files, app):
-    try:
-        product.name = form_data.get('name')
-        product.description = form_data.get('description')
-        product.price = float(form_data.get('price', 0))
-        product.stock = int(form_data.get('stock', 0))
-        product.color = form_data.get('color', 'Preto')
-        product.storage = form_data.get('storage', '128GB')
-        
-        # Processa o upload da imagem, se houver
-        if 'image' in files:
-            file = files['image']
-            if file and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
-                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                file.save(filepath)
-                product.image = filename
-                product.image_url = None  # Limpa a URL se um arquivo foi enviado
-        
-        # Se não houver arquivo, verifica se há uma URL de imagem
-        elif form_data.get('image_url'):
-            product.image_url = form_data.get('image_url')
-            product.image = None  # Limpa a imagem se uma URL foi fornecida
-        
-        db.session.add(product)
-        db.session.commit()
-        return True, "Produto salvo com sucesso!"
-    except Exception as e:
-        db.session.rollback()
-        return False, f"Erro ao salvar o produto: {str(e)}"
-
-# Função para inicializar o banco de dados
-def init_db(app):
-    with app.app_context():
-        # Verifica se já existe um usuário admin
-        if not User.query.filter_by(username='admin').first():
-            # Cria o usuário admin com senha 'admin123'
-            admin = User(
-                username='admin',
-                password_hash=generate_password_hash('admin123', method='pbkdf2:sha256')
-            )
-            db.session.add(admin)
-            try:
-                db.session.commit()
-                print('Usuário admin criado com sucesso!')
-            except Exception as e:
-                db.session.rollback()
-                print(f'Erro ao criar usuário admin: {str(e)}')
-        else:
-            print("Usuário admin já existe.")
+# Função para obter um produto por ID
+def get_product(product_id):
+    for product in products:
+        if product['id'] == product_id:
+            return product
+    return None
 
 # Rota para a página inicial
 @main_bp.route('/')
 def index():
-    products = Product.query.all()
     return render_template('main/index.html', products=products)
 
-# Adiciona a data atual ao contexto de todos os templates
+# Rota para a página de detalhes do produto
+@main_bp.route('/product/<int:product_id>')
+def product_detail(product_id):
+    product = get_product(product_id)
+    if not product:
+        abort(404)
+    return render_template('main/product_detail.html', product=product)
+
+# Adiciona a data atual e funções auxiliares ao contexto de todos os templates
 @main_bp.context_processor
-def inject_now():
-    return {'now': datetime.now(timezone.utc).astimezone()}
+def inject_globals():
+    def get_product_image_url(product):
+        """Retorna a URL da imagem do produto, com fallback para imagem padrão se necessário."""
+        if product.get('image'):
+            return url_for('static', filename=product['image'])
+        elif product.get('image_url'):
+            return product['image_url']
+        return 'https://via.placeholder.com/300x300/CCCCCC/999999?text=Sem+Imagem'
+    
+    def get_color_code(color_name):
+        """Retorna o código hexadecimal da cor baseado no nome em português."""
+        color_map = {
+            'preto': '#000000',
+            'branco': '#FFFFFF',
+            'prata': '#C0C0C0',
+            'dourado': '#FFD700',
+            'azul': '#0000FF',
+            'vermelho': '#FF0000',
+            'verde': '#008000',
+            'amarelo': '#FFFF00',
+            'roxo': '#800080',
+            'rosa': '#FFC0CB',
+            'cinza': '#808080',
+            'azul marinho': '#000080',
+            'verde água': '#00FFFF',
+            'laranja': '#FFA500',
+            'marrom': '#A52A2A',
+            'ouro rosa': '#E0BFB8'
+        }
+        # Remove acentos e converte para minúsculas
+        color_name = ''.join(char for char in color_name.lower() if char.isalpha() or char.isspace())
+        return color_map.get(color_name, '#CCCCCC')  # Retorna cinza claro se a cor não for encontrada
+    
+    return {
+        'now': datetime.now(timezone.utc),
+        'get_product_image_url': get_product_image_url,
+        'get_color_code': get_color_code
+    }
+
+
 
 # Rota para o painel de administração
 @main_bp.route('/admin')
 @login_required
 def admin_dashboard():
-    products = Product.query.all()
-    return render_template('admin/dashboard.html', products=products)
+    # Ordena os produtos pelo ID em ordem decrescente (mais recentes primeiro)
+    sorted_products = sorted(products, key=lambda x: x['id'], reverse=True)
+    return render_template('admin/dashboard.html', products=sorted_products)
 
 # Rota para login do administrador
 @main_bp.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if current_user.is_authenticated:
         return redirect(url_for('main.admin_dashboard'))
-    
+        
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        user = User.query.filter_by(username=username).first()
         
-        if user and check_password_hash(user.password_hash, password):
-            login_user(user)
+        # Verifica as credenciais
+        if username == admin_user.username and admin_user.check_password(password):
+            login_user(admin_user)
             next_page = request.args.get('next')
             return redirect(next_page or url_for('main.admin_dashboard'))
         
-        flash('Usuário ou senha inválidos', 'error')
+        flash('Usuário ou senha inválidos', 'danger')
     
     return render_template('admin/login.html')
 
@@ -185,51 +230,65 @@ def admin_logout():
 @login_required
 def new_product():
     if request.method == 'POST':
-        product = Product()
-        success, message = save_product(product, request.form, request.files, current_app)
-        if success:
-            flash('Produto adicionado com sucesso!', 'success')
-            return redirect(url_for('main.admin_dashboard'))
-        else:
-            flash(message, 'error')
+        # Cria um novo produto com os dados do formulário
+        new_id = max([p['id'] for p in products]) + 1 if products else 1
+        
+        new_product = {
+            'id': new_id,
+            'name': request.form.get('name'),
+            'description': request.form.get('description'),
+            'price': float(request.form.get('price', 0)),
+            'stock': int(request.form.get('stock', 0)),
+            'color': request.form.get('color', 'black'),
+            'storage': request.form.get('storage', '128GB'),
+            'image_url': request.form.get('image_url', ''),
+            'created_at': datetime.now(timezone.utc)
+        }
+        
+        products.append(new_product)
+        flash('Produto adicionado com sucesso!', 'success')
+        return redirect(url_for('main.admin_dashboard'))
     
+    # Se for GET, exibe o formulário de cadastro
     return render_template('admin/product_form.html', product=None)
 
 # Rota para editar um produto existente
 @main_bp.route('/admin/product/edit/<int:product_id>', methods=['GET', 'POST'])
 @login_required
 def edit_product(product_id):
-    product = Product.query.get_or_404(product_id)
+    product = next((p for p in products if p['id'] == product_id), None)
+    if not product:
+        flash('Produto não encontrado!', 'danger')
+        return redirect(url_for('main.admin_dashboard'))
     
     if request.method == 'POST':
-        success, message = save_product(product, request.form, request.files, current_app)
-        if success:
-            flash('Produto atualizado com sucesso!', 'success')
-            return redirect(url_for('main.admin_dashboard'))
-        else:
-            flash(message, 'error')
+        # Atualiza os dados do produto
+        product['name'] = request.form.get('name', product['name'])
+        product['description'] = request.form.get('description', product['description'])
+        product['price'] = float(request.form.get('price', product['price']))
+        product['stock'] = int(request.form.get('stock', product['stock']))
+        product['color'] = request.form.get('color', product['color'])
+        product['storage'] = request.form.get('storage', product['storage'])
+        product['image_url'] = request.form.get('image_url', product.get('image_url', ''))
+        
+        flash('Produto atualizado com sucesso!', 'success')
+        return redirect(url_for('main.admin_dashboard'))
     
+    # Se for GET, exibe o formulário de edição
     return render_template('admin/product_form.html', product=product)
 
 # Rota para excluir um produto
 @main_bp.route('/admin/product/delete/<int:product_id>', methods=['POST'])
 @login_required
 def delete_product(product_id):
-    product = Product.query.get_or_404(product_id)
+    global products
+    product = next((p for p in products if p['id'] == product_id), None)
     
-    try:
-        # Remove a imagem do produto se existir
-        if product.image:
-            image_path = os.path.join(current_app.config['UPLOAD_FOLDER'], product.image)
-            if os.path.exists(image_path):
-                os.remove(image_path)
-        
-        db.session.delete(product)
-        db.session.commit()
+    if not product:
+        flash('Produto não encontrado!', 'danger')
+    else:
+        products = [p for p in products if p['id'] != product_id]
         flash('Produto excluído com sucesso!', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Erro ao excluir o produto: {str(e)}', 'error')
     
     return redirect(url_for('main.admin_dashboard'))
 
